@@ -45,7 +45,7 @@ Make the following changes:
   <field name="speaker" type="text_gen_lower_case"/>
   <field name="state" type="text_gen_lower_case"/>
   
-# The actually managed-schema with all these changes above is in the repository.  Just copy it over.
+# The actual managed-schema with all these changes above is in the repository.  Just copy it.
 
 # 5) Run the commandApp Spring Boot Application
 
