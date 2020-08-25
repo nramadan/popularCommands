@@ -18,18 +18,18 @@ public class Command {
 	@Indexed
 	String id;
 	
-	@Indexed(name = "state", type = "string")
+	@Indexed(name = "state")
 	String state;
 	
-	@Indexed(name = "speaker", type = "string")
+	@Indexed(name = "speaker")
 	String speaker;
 
-	@Indexed(name = "command", type = "string")
+	@Indexed(name = "command")
 	@JsonProperty("command")
 	String command;
 
 	/** The start process time. */
-	@Indexed(name = "createdDt", type = "date")
+	@Indexed(name = "createdDt")
 	private Long createdDt;
 
 	public Command() {

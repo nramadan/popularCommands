@@ -1,49 +1,27 @@
 package com.command;
 
-import java.io.IOException;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.solr.client.solrj.SolrClient;
-import org.apache.solr.client.solrj.SolrRequest;
-import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.common.util.Hash;
-import org.apache.solr.common.util.NamedList;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Bean;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.Sort.Order;
-import org.springframework.data.solr.core.SolrTemplate;
-import org.springframework.data.solr.core.query.Criteria;
-import org.springframework.data.solr.core.query.FacetOptions;
-import org.springframework.data.solr.core.query.FacetQuery;
-import org.springframework.data.solr.core.query.PivotField;
-import org.springframework.data.solr.core.query.SimpleFacetQuery;
-import org.springframework.data.solr.core.query.result.FacetFieldEntry;
-import org.springframework.data.solr.core.query.result.FacetPage;
-import org.springframework.data.solr.core.query.result.FacetPivotFieldEntry;
-import org.springframework.data.solr.core.query.result.FacetQueryEntry;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.command.controller.CommandController;
 import com.command.dto.Command;
 import com.command.repository.CommandRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
+
 public class PopularCommandTest {
 
 	@Autowired
@@ -53,40 +31,104 @@ public class PopularCommandTest {
 	CommandRepository repo;
 	
 	@Test
-	public void testSaveCommands() throws JsonProcessingException {
-		Command command = new Command();
-		command.setCommand("Games Of Thorne");
-		command.setSpeaker("Fred Zhang");
+	public void testSaveFirstStateCommands() throws JsonProcessingException {
+		/** Delete all commands to start from a clean slate **/
+		repo.deleteAll();
 		
-		Map<String, List<Command>> commands = new HashMap<>();
-		commands.put("alabama", Collections.singletonList(command));
+		List<Command> commands = repo.findByStateAndCommand("alabama", "CNN");
 		
-		String reqStr = new ObjectMapper().writeValueAsString(commands);
+		// If removal was successful, then should be pass 
+		assertThat(commands).isEmpty();
 		
-		System.out.println(controller.saveCommands(reqStr));
-		System.out.println(reqStr);
-	}
-	
-	
-	@Test
-	public void mapJsonToObj() throws IOException {
-		String json = "{\"alabama\":[{\"speaker\":\"Fred Zhang\",\"command\":\"Games Of Thorne\"}]}";
+		/** Save the request **/
 		
-		
-		Map<String, List<Command>> commands = 
-				new ObjectMapper().readValue(json, new TypeReference<Map<String, List<Command>>>() {});
-		
-		System.out.println(commands.get("alabama"));
-	}
-	
-	
-	@Test
-	public void testFindByStateAndCommand() throws JsonProcessingException {
-		List<Command> commands = repo.findByStateAndCommand("florida", "Turn off the TV");
-		
-		for (Command command : commands) {
-			System.out.println(new ObjectMapper().writeValueAsString(command));
-		}
-	}
+		// Here is the json request string containing state commands to be saved in Solr
+		String reqStr = "{   \"Alabama\": [ { \"speaker\": \"Fred Zhang\", \"command\": \"CNN\" }, { \"speaker\": \"Fred Zhang\", \"command\": \"NBC\" }, { \"speaker\": \"Fred Zhang\", \"command\": \"CNN\" } ], \"florida\": [ { \"speaker\": \"Thomas Brown\", \"command\": \"Show me movies\" }, { \"speaker\": \" Alisha Brown\", \"command\": \" Stranger Things\" }, { \"speaker\": \"Marcus Brown\", \"command\": \"Game of Thrones\" }, { \"speaker\": \"Missy Brown\", \"command\": \"Turn off the TV\" }, { \"speaker\": \"Missy Brown\", \"command\": \"Turn off the TV\" } ], \"maryland\": [ { \"speaker\": \"Thomas Black\", \"command\": \"Show me comedies\" }, { \"speaker\": \" Alisha Black\", \"command\": \"Game of thrones\" }, { \"speaker\": \"Marcus Black\", \"command\": \"Game of THrones\" }, { \"speaker\": \"Missy Black\", \"command\": \"Game of Thrones \" }, { \"speaker\": \"Missy Black\", \"command\": \"Turn off the TV\" } ] }";
 
+		// Here is the request json string in pretty format 
+		
+		/*
+		   { 
+		   
+		    "Alabama": [ 
+		               { "speaker": "Fred Zhang", "command": "CNN" }, 
+		               { "speaker": "Fred Zhang", "command": "NBC" }, 
+		               { "speaker": "Fred Zhang", "command": "CNN" } ], 
+			"florida": [ 
+			            { "speaker": "Thomas Brown", "command": "Show me movies" }, 
+				 		{ "speaker": " Alisha Brown", "command": " Stranger Things" }, 
+				   		{ "speaker": "Marcus Brown", "command": "Game of Thrones" }, 
+						{ "speaker": "Missy Brown", "command": "Turn off the TV" }, 
+						{ "speaker": "Missy Brown", "command": "Turn off the TV" } ], 
+			"maryland": [ 
+						{ "speaker": "Thomas Black", "command": "Show me comedies" }, 
+						{ "speaker": " Alisha Black", "command": "Game of thrones" }, 
+						{ "speaker": "Marcus Black", "command": "Game of THrones" }, 
+						{ "speaker": "Missy Black", "command": "Game of Thrones " }, 
+						{ "speaker": "Missy Black", "command": "Turn off the TV" } ] 
+		    }
+		 */
+		
+		//Save commands to Solr
+		ResponseEntity<?> response = controller.saveCommands(reqStr);
+		
+		List<Object> resBody = (ArrayList<Object>)response.getBody();
+//		Map<String, List<StateCommand>> stateCommands = (Map<String, List<StateCommand>>) resBody.get(0);
+		
+		Map<String, List<String>> topNationalCommands = (Map<String, List<String>>) resBody.get(1);
+		
+		assertThat(topNationalCommands.get("topCommandsNationally").get(0)).isEqualTo("Game Of Thrones");
+		assertThat(topNationalCommands.get("topCommandsNationally").get(1)).isEqualTo("Turn Off The Tv");
+		assertThat(topNationalCommands.get("topCommandsNationally").get(2)).isEqualTo("Cnn");
+		
+		System.out.println(new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(response));
+		
+		// Assert that all the commands have been successfully inserted
+		assertThat(repo.findAll()).hasSize(13);
+		
+	}
+	
+	/**
+	 * Test add new state commands.  ABC will assume 2nd place (knocking off CNN and out ranking "Turn Off the Tv") after adding this state.
+	 *
+	 * @throws JsonProcessingException the json processing exception
+	 */
+	@Test
+	public void testAddNewStateCommands() throws JsonProcessingException {
+		testSaveFirstStateCommands();
+		
+		/** Save the request **/
+		
+		// Here is the json request string containing state commands to be saved in Solr
+		String reqStr = "{ \"New Jersey\": [ { \"speaker\": \"Fred Zhang\", \"command\": \"ABC\" }, { \"speaker\": \"Fred Zhang\", \"command\": \"ABC\" }, { \"speaker\": \"Fred Zhang\", \"command\": \"ABC\" } ]}";
+		
+		// Here is the request json string in pretty format 
+		
+		/*
+		   { 
+		   
+		    "New Jersey": [ 
+		               { "speaker": "Fred Zhang", "command": "ABC" }, 
+		               { "speaker": "Fred Zhang", "command": "ABC" }, 
+		               { "speaker": "Fred Zhang", "command": "ABC" } ]
+		    }
+		 */
+		
+		//Save commands to Solr
+		ResponseEntity<?> response = controller.saveCommands(reqStr);
+		
+		List<Object> resBody = (ArrayList<Object>)response.getBody();
+		Map<String, List<String>> topNationalCommands = (Map<String, List<String>>) resBody.get(1);
+		
+		System.out.println(new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(response));
+		
+		// Assert that all the commands have been successfully inserted
+		assertThat(repo.findAll()).hasSize(16);
+		
+		assertThat(topNationalCommands.get("topCommandsNationally").get(0)).isEqualTo("Game Of Thrones");
+		assertThat(topNationalCommands.get("topCommandsNationally").get(1)).isEqualTo("Abc");
+		assertThat(topNationalCommands.get("topCommandsNationally").get(2)).isEqualTo("Turn Off The Tv");
+		
+	}
+	
 }

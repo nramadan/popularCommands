@@ -16,7 +16,7 @@ public class CommandController {
 	CommandService service;
 	
 	@PostMapping(path = "/commands")
-	public ResponseEntity<?> saveCommands(@RequestBody String stateCommands) {
+	 public synchronized ResponseEntity<?> saveCommands(@RequestBody String stateCommands) {
 		
 		try {
 			// Retrieve list of state commands Object To json mapping 
