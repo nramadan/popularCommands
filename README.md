@@ -7,7 +7,7 @@
 Install Solr on Windows per the instructions in the Document “Installating Solr on Windows.docx”.
 
 # 2) Run Solr
-PS H:\thirdparty\solr-8.6.1\bin> .\solr start
+solr-8.6.1\bin> .\solr start
 
 Java HotSpot(TM) 64-Bit Server VM warning: JVM cannot use large page memory because it does not have enough privilege to lock pages in memory.
 Waiting up to 30 to see Solr running on port 8983
@@ -15,7 +15,7 @@ Started Solr server on port 8983. Happy searching!
 
 
 # 3) Create stateCommands Core
-PS H:\thirdparty\solr-8.6.1\bin>.\solr create -c stateCommands
+solr-8.6.1\bin>.\solr create -c stateCommands
 
 WARNING: Using _default configset with data driven schema functionality. NOT RECOMMENDED for production use.
          To turn off: bin\solr config -c stateCommands -p 8983 -action set-user-property -property update.autoCreateFields -value false
