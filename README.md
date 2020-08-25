@@ -26,7 +26,7 @@ Created new core 'stateCommands'
 
 Make the following changes:
 
-# 4-a) add new fieldType text_gen_lower_case
+# 4 a) add new fieldType text_gen_lower_case
 <fieldType name="text_gen_lower_case" class="solr.TextField" positionIncrementGap="100">
       <analyzer type="index">
         <tokenizer class="solr.KeywordTokenizerFactory"/>
@@ -40,13 +40,14 @@ Make the following changes:
       </analyzer>
 </fieldType>
 
-# 4-b) Assign fieldType to stateCommands indexed fields
+# 4 b) Assign fieldType to stateCommands indexed fields
   <field name="command" type="text_gen_lower_case"/>
   <field name="speaker" type="text_gen_lower_case"/>
   <field name="state" type="text_gen_lower_case"/>
   
+# The actually managed-schema with all these changes above is in the repository.  Just copy it over.
 
-# 4) Run the commandApp Spring Boot Application
+# 5) Run the commandApp Spring Boot Application
 
 One option is to Import the application maven project into eclipse and run it as followings:
  
@@ -54,7 +55,7 @@ One option is to Import the application maven project into eclipse and run it as
 
 - Right click the maven project parent folder and click run java application then select “commandApp”.
 
-# 5) load up the stateCommands core with initial data (as provided by problem description).
+# 6) load up the stateCommands core with initial data (as provided by problem description).
 To do this run the following POST request from Postman:
 http://localhost:8080/commands 
 with the following as the requestion body:
