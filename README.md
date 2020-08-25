@@ -22,6 +22,29 @@ WARNING: Using _default configset with data driven schema functionality. NOT REC
 
 Created new core 'stateCommands'
 
+# 4) Change the \server\solr\stateCommands\conf\managed-schema 
+
+Make the following changes:
+
+# 4-a) add new fieldType text_gen_lower_case
+<fieldType name="text_gen_lower_case" class="solr.TextField" positionIncrementGap="100">
+      <analyzer type="index">
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+        <filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords.txt" />
+        <filter class="solr.CapitalizationFilterFactory" onlyFirstWord="false"/>
+      </analyzer>
+      <analyzer type="query">
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+        <filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords.txt" />
+        <filter class="solr.CapitalizationFilterFactory"  onlyFirstWord="false"/>
+      </analyzer>
+</fieldType>
+
+# 4-b) Assign fieldType to stateCommands indexed fields
+  <field name="command" type="text_gen_lower_case"/>
+  <field name="speaker" type="text_gen_lower_case"/>
+  <field name="state" type="text_gen_lower_case"/>
+  
 
 # 4) Run the commandApp Spring Boot Application
 
